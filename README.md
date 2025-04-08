@@ -250,6 +250,30 @@ File Excel cần có các cột theo thứ tự:
 - Cột E: Categories (phân cách bằng dấu phẩy)
 - Cột F: Tags (phân cách bằng dấu phẩy)
 
+### Sitemap
+Sau khi import thành công, hệ thống sẽ tự động tạo/cập nhật sitemap:
+
+1. Vị trí file: `your-domain.com/sitemap.xml`
+
+2. Cấu trúc sitemap:
+   - Trang chủ (priority: 1.0)
+   - Bài viết đã publish (priority: 0.8)
+   - Trang categories (priority: 0.6)
+
+3. Thông tin mỗi URL:
+   ```xml
+   <url>
+     <loc>https://your-domain.com/post-slug</loc>
+     <lastmod>2025-04-08T09:07:49+00:00</lastmod>
+     <priority>0.8</priority>
+   </url>
+   ```
+
+4. Tự động ping Google:
+   - Sau khi tạo/cập nhật sitemap
+   - Gửi thông báo tới Google Search Console
+   - Giúp index nội dung mới nhanh hơn
+
 ## Tính năng Tracking
 
 ### Tracking nội bộ

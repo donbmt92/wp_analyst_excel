@@ -141,8 +141,13 @@ class WP_Excel_Import {
      * Hiển thị kết quả import
      */
     private function show_import_result($imported, $errors) {
+        // Tạo lại sitemap nếu có bài viết được import
+        if ($imported > 0) {
+            $this->generate_sitemap();
+        }
+
         $message = sprintf(
-            'Đã import thành công %d bài viết.',
+            'Đã import thành công %d bài viết. Sitemap đã được cập nhật.',
             $imported
         );
         
@@ -158,5 +163,66 @@ class WP_Excel_Import {
             echo '</ul>';
             echo '</div>';
         }
+    }
+
+    /**
+     * Tạo sitemap
+     */
+    private function generate_sitemap() {
+        $sitemap_content = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $sitemap_content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+        // Lấy tất cả bài viết đã publish
+        $posts = get_posts(array(
+            'post_type' => 'post',
+            'post_status' => 'publish',
+            'posts_per_page' => -1
+        ));
+
+        // Thêm URL của trang chủ
+        $sitemap_content .= $this->get_sitemap_url(get_home_url(), '1.0');
+
+        // Thêm URL của từng bài viết
+        foreach ($posts as $post) {
+            $sitemap_content .= $this->get_sitemap_url(
+                get_permalink($post),
+                '0.8',
+                get_post_modified_time('c', true, $post)
+            );
+        }
+
+        // Thêm URL của các trang Categories
+        $categories = get_categories();
+        foreach ($categories as $category) {
+            $sitemap_content .= $this->get_sitemap_url(
+                get_category_link($category->term_id),
+                '0.6'
+            );
+        }
+
+        $sitemap_content .= '</urlset>';
+
+        // Lưu sitemap
+        $sitemap_path = ABSPATH . 'sitemap.xml';
+        file_put_contents($sitemap_path, $sitemap_content);
+
+        // Ping Google về sitemap mới
+        $ping_url = 'http://www.google.com/webmasters/tools/ping?sitemap=' . urlencode(get_home_url() . '/sitemap.xml');
+        wp_remote_get($ping_url);
+    }
+
+    /**
+     * Tạo XML cho một URL trong sitemap
+     */
+    private function get_sitemap_url($url, $priority = '0.5', $lastmod = '') {
+        $url = esc_url($url);
+        $output = "  <url>\n";
+        $output .= "    <loc>$url</loc>\n";
+        if ($lastmod) {
+            $output .= "    <lastmod>$lastmod</lastmod>\n";
+        }
+        $output .= "    <priority>$priority</priority>\n";
+        $output .= "  </url>\n";
+        return $output;
     }
 }
